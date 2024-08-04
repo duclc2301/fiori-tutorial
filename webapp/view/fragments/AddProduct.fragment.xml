@@ -1,0 +1,82 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:f="sap.ui.layout.form"
+>
+    <Dialog
+        id="add-product-dialog"
+        title="Add Product"
+        afterClose="onAfterCloseDialog"
+        contentWidth="400px"
+    >
+        <content>
+            <f:SimpleForm
+                id="add-product-form"
+                editable="true"
+            >
+                <f:content>
+                    <Label text="Product Name" />
+                    <Input
+                        required="true"
+                        value="{form>Name}"
+                        change="onChangeValue"
+                        fieldGroupIds="FormField"
+                    />
+                    <Label text="Product Id" />
+                    <Input
+                        required="true"
+                        value="{form>ProductId}"
+                        change="onChangeValue"
+                        fieldGroupIds="FormField"
+                    />
+                    <Label text="Category" />
+                    <ComboBox
+                        required="true"
+                        showClearIcon="true"
+                        selectedKey="{form>Category}"
+                        items="{
+                            path: 'searchHelp>/ProductCategories'
+				        }"
+                        change="onChangeValue"
+                        fieldGroupIds="FormField"
+                    >
+                        <core:Item
+                            key="{searchHelp>key}"
+                            text="{searchHelp>name}"
+                        />
+                    </ComboBox>
+                    <Label text="Supplier Name" />
+                    <ComboBox
+                        required="true"
+                        showClearIcon="true"
+                        selectedKey="{form>SupplierName}"
+                        items="{
+                            path: 'searchHelp>/ProductSuppliers'
+				        }"
+                        change="onChangeValue"
+                        fieldGroupIds="FormField"
+                    >
+                        <core:Item
+                            key="{searchHelp>key}"
+                            text="{searchHelp>name}"
+                        />
+                    </ComboBox>
+                </f:content>
+            </f:SimpleForm>
+        </content>
+        <beginButton>
+            <Button
+                text="Save"
+                type="Emphasized"
+                icon="sap-icon://save"
+                press="onAddProduct"
+            />
+        </beginButton>
+        <endButton>
+            <Button
+                text="Close"
+                press="onCloseAddProduct"
+            />
+        </endButton>
+    </Dialog>
+</core:FragmentDefinition>

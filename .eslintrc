@@ -5,6 +5,9 @@
     "comma-dangle": "off",
     "no-console": "warn",
     "curly": "off",
+    "no-shadow": "off",
+    "complexity": "off",
+    "max-statements": "off",
     "@typescript-eslint/no-explicit-any": "warn"
   }
 }

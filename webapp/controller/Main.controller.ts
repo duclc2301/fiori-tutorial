@@ -1,20 +1,31 @@
+import type { Button$PressEvent } from "sap/m/Button";
 import ComboBox from "sap/m/ComboBox";
 import DatePicker from "sap/m/DatePicker";
+import Dialog, { type Dialog$AfterCloseEvent } from "sap/m/Dialog";
 import Input from "sap/m/Input";
+import InputBase, { type InputBase$ChangeEvent } from "sap/m/InputBase";
 import Label from "sap/m/Label";
+import MessageBox from "sap/m/MessageBox";
+import MessageToast from "sap/m/MessageToast";
 import MultiComboBox from "sap/m/MultiComboBox";
+import type { ObjectIdentifier$TitlePressEvent } from "sap/m/ObjectIdentifier";
 import Select from "sap/m/Select";
 import FilterBar, {
-  FilterBar$FilterChangeEventParameters,
+  type FilterBar$FilterChangeEventParameters,
 } from "sap/ui/comp/filterbar/FilterBar";
 import FilterGroupItem from "sap/ui/comp/filterbar/FilterGroupItem";
 import PersonalizableInfo from "sap/ui/comp/smartvariants/PersonalizableInfo";
 import SmartVariantManagement from "sap/ui/comp/smartvariants/SmartVariantManagement";
+import type Control from "sap/ui/core/Control";
+import { ValueState } from "sap/ui/core/library";
 import JSONModel from "sap/ui/model/json/JSONModel";
+import type Row from "sap/ui/table/Row";
+import type { RowActionItem$PressEvent } from "sap/ui/table/RowActionItem";
 import Table from "sap/ui/table/Table";
 import { MODEL_DATA } from "../constant/model";
-import { FilterData } from "../types/filter";
-import { Dict } from "../types/utils";
+import type { Product } from "../types";
+import type { FilterData } from "../types/filter";
+import type { Dict } from "../types/utils";
 import Base from "./Base.controller";
 
 /**
@@ -26,6 +37,9 @@ export default class Main extends Base {
   private snappedLabel: Label;
   private filterBar: FilterBar;
   private table: Table;
+  private addProductDialog?: Dialog;
+  private productDetailDialog?: Dialog;
+  private editProductDialog?: Dialog;
 
   public onInit(): void {
     this.svm = this.getControlById("svm");
@@ -34,7 +48,29 @@ export default class Main extends Base {
     this.filterBar = this.getControlById("filterbar");
     this.table = this.getControlById("table");
 
-    this.setModel(new JSONModel(MODEL_DATA));
+    this.setModel(
+      new JSONModel({
+        ProductNames: MODEL_DATA.ProductNames,
+        ProductCategories: MODEL_DATA.ProductCategories,
+        ProductSuppliers: MODEL_DATA.ProductSuppliers,
+      }),
+      "searchHelp"
+    );
+    this.setModel(
+      new JSONModel({
+        rows: MODEL_DATA.ProductCollection,
+      }),
+      "table"
+    );
+    this.setModel(
+      new JSONModel({
+        Name: "",
+        ProductId: "",
+        Category: "",
+        SupplierName: "",
+      }),
+      "form"
+    );
 
     this.filterBar.registerFetchData(this.fetchData);
     this.filterBar.registerApplyData(this.applyData);
@@ -51,6 +87,7 @@ export default class Main extends Base {
     this.svm.initialise(() => {}, this.filterBar);
   }
 
+  // #region Filter
   // Get value fields to create new filter variant
   private fetchData = () => {
     return this.filterBar
@@ -196,5 +233,281 @@ export default class Main extends Base {
       }, {});
 
     console.log(values);
+  }
+  // #endregion
+
+  // Add product
+  public async onOpenAddProduct() {
+    if (!this.addProductDialog) {
+      this.addProductDialog = await (<Promise<Dialog>>this.loadFragment({
+        name: "sphinxjsc.com.fioritutorial.view.fragments.AddProduct",
+      }));
+    }
+
+    this.addProductDialog.bindElement("form>/");
+    this.addProductDialog.open();
+  }
+
+  public onCloseAddProduct() {
+    this.addProductDialog?.close();
+  }
+
+  public onAddProduct() {
+    const tableModel = this.getModel("table");
+
+    const controls = this.getControlsByFieldGroupId<InputBase>({
+      control: this.addProductDialog,
+      groupId: "FormField",
+    });
+
+    const isValid = this.validateControls(controls);
+
+    if (!isValid) {
+      return;
+    }
+
+    const value = <Product>this.getModel("form").getData();
+    const rows = (<Product[]>tableModel.getProperty("/rows")).slice();
+    rows.push(value);
+
+    tableModel.setProperty("/rows", rows);
+
+    MessageToast.show("Add row successfully");
+
+    this.onCloseAddProduct();
+  }
+
+  // Edit product
+  public async onOpenEditProduct(event: RowActionItem$PressEvent) {
+    const source = event.getSource();
+    const rowIndex = event.getParameter("row")?.getIndex();
+    const row = <Product>source.getBindingContext("table")?.getObject();
+
+    this.getModel("form").setData(row);
+
+    if (!this.editProductDialog) {
+      this.editProductDialog = await (<Promise<Dialog>>this.loadFragment({
+        name: "sphinxjsc.com.fioritutorial.view.fragments.EditProduct",
+      }));
+    }
+
+    this.editProductDialog.bindElement("form>/");
+    this.editProductDialog.bindElement(`table>/rows/${rowIndex}`);
+    this.editProductDialog.open();
+  }
+
+  public onCloseEditProduct() {
+    this.editProductDialog?.close();
+  }
+
+  public onEditProduct(event: Button$PressEvent) {
+    const tableModel = this.getModel("table");
+    const path = event.getSource().getBindingContext("table")?.getPath();
+
+    const rowIndex = path?.split("/rows/").pop();
+
+    const controls = this.getControlsByFieldGroupId<InputBase>({
+      control: this.editProductDialog,
+      groupId: "FormField",
+    });
+
+    const isValid = this.validateControls(controls);
+
+    if (!isValid) {
+      return;
+    }
+
+    const value = <Product>this.getModel("form").getData();
+
+    tableModel.setProperty(`/rows/${rowIndex}`, value);
+
+    MessageToast.show("Product was updated successfully");
+
+    this.onCloseEditProduct();
+  }
+
+  // Product detail
+  public async onOpenProductDetail(event: ObjectIdentifier$TitlePressEvent) {
+    const source = event.getSource();
+    const row = <Product>source.getBindingContext("table")?.getObject();
+
+    this.getModel("form").setData(row);
+
+    if (!this.productDetailDialog) {
+      this.productDetailDialog = await (<Promise<Dialog>>this.loadFragment({
+        name: "sphinxjsc.com.fioritutorial.view.fragments.ProductDetail",
+      }));
+    }
+
+    this.productDetailDialog.bindElement("form>/");
+    this.productDetailDialog.open();
+  }
+
+  public onCloseProductDetail() {
+    this.productDetailDialog?.close();
+  }
+
+  // Clean up after close dialog
+  public onAfterCloseDialog(event: Dialog$AfterCloseEvent) {
+    const dialog = event.getSource();
+
+    const controls = this.getControlsByFieldGroupId<InputBase>({
+      control: dialog,
+      groupId: "FormField",
+    });
+
+    this.clearControlErrorMessages(controls);
+
+    dialog.unbindElement("form");
+    dialog.unbindElement("table");
+    this.getModel("form").setData({});
+  }
+
+  // Delete product
+  public onDeleteProduct(event: RowActionItem$PressEvent) {
+    const tableModel = this.getModel("table");
+    const row = <Row>event.getParameter("row");
+    const rowIndex = row.getIndex();
+
+    MessageBox.confirm("Do you want to delete this row?", {
+      actions: [MessageBox.Action.DELETE, MessageBox.Action.CANCEL],
+      emphasizedAction: MessageBox.Action.DELETE,
+      onClose: (action: unknown) => {
+        if (action === MessageBox.Action.DELETE) {
+          const rows = (<Product[]>tableModel.getProperty("/rows")).slice();
+          rows.splice(rowIndex, 1);
+
+          tableModel.setProperty("/rows", rows);
+
+          MessageToast.show("Delete row successfully");
+        }
+      },
+    });
+  }
+
+  public onDeleteProducts() {
+    const tableModel = this.getModel("table");
+    const indices = this.table.getSelectedIndices();
+
+    if (!indices.length) {
+      MessageToast.show("Please select row to delete");
+      return;
+    }
+
+    MessageBox.confirm("Do you want to delete selected rows?", {
+      actions: [MessageBox.Action.DELETE, MessageBox.Action.CANCEL],
+      emphasizedAction: MessageBox.Action.DELETE,
+      onClose: (action: unknown) => {
+        if (action === MessageBox.Action.DELETE) {
+          const rows = (<Product[]>tableModel.getProperty("/rows")).slice();
+          const rest = rows.filter((_, index) => !indices.includes(index));
+
+          tableModel.setProperty("/rows", rest);
+
+          MessageToast.show("Delete rows successfully");
+        }
+      },
+    });
+  }
+
+  // Table
+  public onRowSelectionChange() {
+    const indices = this.table.getSelectedIndices();
+    this.getModel("table").setProperty("/selectedIndices", [...indices]);
+  }
+
+  // Messaging
+  public onChangeValue(event: InputBase$ChangeEvent) {
+    const source = event.getSource();
+    if (source.getVisible()) {
+      this.validateInputs(source);
+    }
+  }
+
+  private clearControlErrorMessages(controls: InputBase[]) {
+    controls.forEach((control) => {
+      control.setValueState(ValueState.None);
+      control.setValueStateText("");
+    });
+  }
+
+  private getControlsByFieldGroupId<T extends Control>(props: {
+    control?: Control;
+    groupId: string;
+  }) {
+    const { control, groupId } = props;
+
+    if (!control) return [];
+
+    const controls = control
+      .getControlsByFieldGroupId(groupId)
+      .filter((control) => {
+        const isVisible = control.getVisible();
+        const isValidInput = control.isA(["sap.m.Input", "sap.m.ComboBox"]);
+
+        return isVisible && isValidInput;
+      });
+
+    return controls as T[];
+  }
+
+  private validateControls(controls: InputBase[]) {
+    let isValid = false;
+    let isError = false;
+
+    controls.forEach((control) => {
+      isError = this.validateInputs(control);
+      isValid = isValid || isError;
+    });
+
+    return !isValid;
+  }
+
+  private validateInputs(source: InputBase) {
+    let isError = false;
+    let isRequiredError = false;
+
+    if (!source.getBindingContext("form")) {
+      return false;
+    }
+
+    source.setValueState(ValueState.None);
+    source.setValueStateText("");
+
+    const isRequired = source.getRequired();
+
+    if (source.isA<MultiComboBox>("sap.m.MultiComboBox")) {
+      const value = source.getSelectedKeys();
+      if (!value.length && isRequired) {
+        isRequiredError = true;
+      }
+    } else if (
+      source.isA<ComboBox | Select>(["sap.m.ComboBox", "sap.m.Select"])
+    ) {
+      const value = source.getSelectedKey();
+      if (!value && isRequired) {
+        isRequiredError = true;
+      }
+    } else if (source.isA<DatePicker>("sap.m.DatePicker")) {
+      const value = source.getValue();
+      if (!value && isRequired) {
+        isRequiredError = true;
+      }
+    } else if (source.isA<Input>("sap.m.Input")) {
+      const value = source.getValue();
+      if (!value && isRequired) {
+        isRequiredError = true;
+      }
+    }
+
+    if (isRequiredError) {
+      source.setValueState(ValueState.Error);
+      source.setValueStateText("Required");
+      isError = true;
+    }
+
+    // Add more validation here
+
+    return isError;
   }
 }

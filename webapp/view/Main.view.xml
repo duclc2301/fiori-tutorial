@@ -7,6 +7,7 @@
     xmlns:f="sap.f"
     xmlns:fb="sap.ui.comp.filterbar"
     xmlns:svm="sap.ui.comp.smartvariants"
+    xmlns:table="sap.ui.table"
 >
     <f:DynamicPage headerExpanded="{/headerExpanded}">
         <f:title>
@@ -54,13 +55,13 @@
                                         name="Name"
                                         selectionChange=".onFieldChange"
                                         items="{
-											path: '/ProductNames',
+											path: 'searchHelp>/ProductNames',
 											templateShareable: true
 										}"
                                     >
                                         <core:Item
-                                            key="{key}"
-                                            text="{name}"
+                                            key="{searchHelp>key}"
+                                            text="{searchHelp>name}"
                                         />
                                     </MultiComboBox>
                                 </fb:control>
@@ -76,13 +77,13 @@
                                         name="Category"
                                         selectionChange=".onFieldChange"
                                         items="{
-											path: '/ProductCategories',
+											path: 'searchHelp>/ProductCategories',
 											templateShareable: true
 										}"
                                     >
                                         <core:Item
-                                            key="{key}"
-                                            text="{name}"
+                                            key="{searchHelp>key}"
+                                            text="{searchHelp>name}"
                                         />
                                     </MultiComboBox>
                                 </fb:control>
@@ -98,13 +99,13 @@
                                         name="SupplierName"
                                         selectionChange=".onFieldChange"
                                         items="{
-											path: '/ProductSuppliers',
+											path: 'searchHelp>/ProductSuppliers',
 											templateShareable: true
 										}"
                                     >
                                         <core:Item
-                                            key="{key}"
-                                            text="{name}"
+                                            key="{searchHelp>key}"
+                                            text="{searchHelp>name}"
                                         />
                                     </MultiComboBox>
                                 </fb:control>
@@ -115,46 +116,81 @@
             </f:DynamicPageHeader>
         </f:header>
         <f:content>
-            <Table
+            <table:Table
                 id="table"
-                inset="false"
-                items="{
-					path: '/ProductCollection'
-				}"
+                rows="{table>/rows}"
+                selectionMode="MultiToggle"
+                rowActionCount="2"
+                rowSelectionChange="onRowSelectionChange"
             >
-                <columns>
-                    <Column
-                        minScreenWidth="Tablet"
-                        demandPopin="true"
-                    >
-                        <Text text="Name" />
-                    </Column>
-                    <Column
-                        minScreenWidth="Tablet"
-                        demandPopin="true"
-                    >
-                        <Text text="Category" />
-                    </Column>
-                    <Column
-                        minScreenWidth="Tablet"
-                        demandPopin="true"
-                    >
-                        <Text text="SupplierName" />
-                    </Column>
-                </columns>
-                <items>
-                    <ColumnListItem vAlign="Middle">
-                        <cells>
+                <table:extension>
+                    <OverflowToolbar class="sapMTBHeader-CTX">
+                        <Title
+                            id="title"
+                            text="Products"
+                        />
+                        <ToolbarSpacer />
+                        <Button
+                            text="Add row"
+                            icon="sap-icon://add"
+                            type="Emphasized"
+                            press="onOpenAddProduct"
+                        />
+                        <Button
+                            text="Delete"
+                            icon="sap-icon://delete"
+                            type="Reject"
+                            press="onDeleteProducts"
+                            enabled="{= ${table>/selectedIndices}.length > 0 }"
+                        />
+                    </OverflowToolbar>
+                </table:extension>
+                <table:columns>
+                    <table:Column>
+                        <Label text="Product Name" />
+                        <table:template>
                             <ObjectIdentifier
-                                title="{Name}"
-                                text="{ProductId}"
+                                title="{table>Name}"
+                                titleActive="true"
+                                titlePress="onOpenProductDetail"
                             />
-                            <Text text="{Category}" />
-                            <Text text="{SupplierName}" />
-                        </cells>
-                    </ColumnListItem>
-                </items>
-            </Table>
+                        </table:template>
+                    </table:Column>
+                    <table:Column>
+                        <Label text="Product Id" />
+                        <table:template>
+                            <Text text="{table>ProductId}" />
+                        </table:template>
+                    </table:Column>
+                    <table:Column>
+                        <Label text="Category" />
+                        <table:template>
+                            <Label text="{table>Category}" />
+                        </table:template>
+                    </table:Column>
+                    <table:Column>
+                        <Label text="SupplierName" />
+                        <table:template>
+                            <Label text="{table>SupplierName}" />
+                        </table:template>
+                    </table:Column>
+                </table:columns>
+                <table:rowActionTemplate>
+                    <table:RowAction>
+                        <table:RowActionItem
+                            type="Custom"
+                            text="Edit"
+                            icon="sap-icon://edit"
+                            press="onOpenEditProduct"
+                        />
+                        <table:RowActionItem
+                            type="Delete"
+                            icon="sap-icon://delete"
+                            press="onDeleteProduct"
+                        />
+                    </table:RowAction>
+                </table:rowActionTemplate>
+            </table:Table>
         </f:content>
     </f:DynamicPage>
 </mvc:View>

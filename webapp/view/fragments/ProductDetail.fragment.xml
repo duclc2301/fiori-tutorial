@@ -1,0 +1,78 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:f="sap.ui.layout.form"
+>
+    <Dialog
+        id="product-detail-dialog"
+        title="Product Detail"
+        afterClose="onAfterCloseDialog"
+        contentWidth="400px"
+    >
+        <content>
+            <f:SimpleForm
+                id="product-detail-form"
+                editable="true"
+            >
+                <f:content>
+                    <Label text="Product Name" />
+                    <Input
+                        required="true"
+                        value="{form>Name}"
+                        change="onChangeValue"
+                        fieldGroupIds="FormField"
+                        editable="false"
+                    />
+                    <Label text="Product Id" />
+                    <Input
+                        required="true"
+                        value="{form>ProductId}"
+                        change="onChangeValue"
+                        fieldGroupIds="FormField"
+                        editable="false"
+                    />
+                    <Label text="Category" />
+                    <ComboBox
+                        required="true"
+                        showClearIcon="true"
+                        selectedKey="{form>Category}"
+                        items="{
+                            path: 'searchHelp>/ProductCategories'
+				                }"
+                        change="onChangeValue"
+                        fieldGroupIds="FormField"
+                        editable="false"
+                    >
+                        <core:Item
+                            key="{searchHelp>key}"
+                            text="{searchHelp>name}"
+                        />
+                    </ComboBox>
+                    <Label text="Supplier Name" />
+                    <ComboBox
+                        required="true"
+                        showClearIcon="true"
+                        selectedKey="{form>SupplierName}"
+                        items="{
+                            path: 'searchHelp>/ProductSuppliers'
+				                }"
+                        change="onChangeValue"
+                        fieldGroupIds="FormField"
+                        editable="false"
+                    >
+                        <core:Item
+                            key="{searchHelp>key}"
+                            text="{searchHelp>name}"
+                        />
+                    </ComboBox>
+                </f:content>
+            </f:SimpleForm>
+        </content>
+        <endButton>
+            <Button
+                text="Close"
+                press="onCloseProductDetail"
+            />
+        </endButton>
+    </Dialog>
+</core:FragmentDefinition>

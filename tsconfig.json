@@ -11,22 +11,12 @@
     "outDir": "./dist",
     "baseUrl": "./",
     "paths": {
-      "sphinxjsc/com/fioritutorial/*": [
-        "./webapp/*"
-      ],
-      "unit/*": [
-        "./webapp/test/unit/*"
-      ],
-      "integration/*": [
-        "./webapp/test/integration/*"
-      ]
+      "sphinxjsc/com/fioritutorial/*": ["./webapp/*"],
+      "unit/*": ["./webapp/test/unit/*"],
+      "integration/*": ["./webapp/test/integration/*"]
     },
-    "typeRoots": [
-      "./node_modules/@types",
-      "./node_modules/@sapui5/types"
-    ]
+    "verbatimModuleSyntax": true,
+    "typeRoots": ["./node_modules/@types", "./node_modules/@sapui5/types"]
   },
-  "include": [
-    "./webapp/**/*"
-  ]
+  "include": ["./webapp/**/*"]
 }
