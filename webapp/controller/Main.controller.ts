@@ -272,7 +272,7 @@ export default class Main extends Base {
 
     tableModel.setProperty("/rows", rows);
 
-    MessageToast.show("Add row successfully");
+    MessageToast.show("Product was successfully created");
 
     this.onCloseAddProduct();
   }
@@ -321,7 +321,7 @@ export default class Main extends Base {
 
     tableModel.setProperty(`/rows/${rowIndex}`, value);
 
-    MessageToast.show("Product was updated successfully");
+    MessageToast.show("Product was successfully updated");
 
     this.onCloseEditProduct();
   }
@@ -379,7 +379,7 @@ export default class Main extends Base {
 
           tableModel.setProperty("/rows", rows);
 
-          MessageToast.show("Delete row successfully");
+          MessageToast.show("Product was successfully deleted");
         }
       },
     });
@@ -404,7 +404,7 @@ export default class Main extends Base {
 
           tableModel.setProperty("/rows", rest);
 
-          MessageToast.show("Delete rows successfully");
+          MessageToast.show("Products have been successfully deleted");
         }
       },
     });
