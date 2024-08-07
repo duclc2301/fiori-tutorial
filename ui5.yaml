@@ -15,6 +15,10 @@ server:
             - /resources
             - /test-resources
           url: https://ui5.sap.com
+        backend:
+          - path: /sap
+            url: http://sapdemo.sphinxjsc.com:8000
+            client: '811'
     - name: fiori-tools-appreload
       afterMiddleware: compression
       configuration:

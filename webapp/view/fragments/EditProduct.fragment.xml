@@ -4,63 +4,99 @@
     xmlns:f="sap.ui.layout.form"
 >
     <Dialog
-        id="edit-product-dialog"
+        id="editProductDialog"
         title="Edit Product"
+        beforeOpen="onBeforeEditProduct"
         afterClose="onAfterCloseDialog"
         contentWidth="400px"
     >
         <content>
             <f:SimpleForm
-                id="edit-product-form"
+                id="editProductForm"
                 editable="true"
             >
                 <f:content>
-                    <Label text="Product Name" />
+                    <Label text="ID" />
                     <Input
                         required="true"
-                        value="{form>Name}"
+                        value="{form>Employeeid}"
+                        editable="false"
+                    />
+                    <Label text="Full Name" />
+                    <Input
+                        required="true"
+                        value="{form>Fullname}"
                         change="onChangeValue"
                         fieldGroupIds="FormField"
                     />
-                    <Label text="Product Id" />
+                    <Label text="Gender" />
                     <Input
                         required="true"
-                        value="{form>ProductId}"
+                        value="{form>Gender}"
                         change="onChangeValue"
                         fieldGroupIds="FormField"
                     />
-                    <Label text="Category" />
-                    <ComboBox
+                    <Label text="StartDate" />
+                    <Input
                         required="true"
-                        showClearIcon="true"
-                        selectedKey="{form>Category}"
-                        items="{
-                            path: 'searchHelp>/ProductCategories'
+                        value="{form>StartDate}"
+                        change="onChangeValue"
+                        fieldGroupIds="FormField"
+                    />
+                    <Label text="Contracttype" />
+                    <Input
+                        required="true"
+                        value="{form>Contracttype}"
+                        change="onChangeValue"
+                        fieldGroupIds="FormField"
+                    />
+                    <Label text="Birthdate" />
+                    <Input
+                        required="true"
+                        value="{form>Birthdate}"
+                        change="onChangeValue"
+                        fieldGroupIds="FormField"
+                    />
+                    <Label text="Address" />
+                    <Input
+                        required="true"
+                        value="{form>Address}"
+                        change="onChangeValue"
+                        fieldGroupIds="FormField"
+                    />
+                    <Label text="Phone" />
+                    <Input
+                        required="true"
+                        value="{form>Phone}"
+                        change="onChangeValue"
+                        fieldGroupIds="FormField"
+                    />
+                    <Label text="Plans" />
+                    <Input
+                        required="true"
+                        value="{form>Plans}"
+                        change="onChangeValue"
+                        fieldGroupIds="FormField"
+                    />
+                    <Label text="Salary" />
+                    <Input
+                        required="true"
+                        value="{
+                           parts: [
+                                'form>Salary',
+                                'view>/currency'
+                            ],
+                            type: 'sap.ui.model.type.Currency',
+                            formatOptions: {
+                                showMeasure: false,
+                                decimalSeparator: ',',
+                                groupingSeparator: '.'
+                            }
                         }"
                         change="onChangeValue"
                         fieldGroupIds="FormField"
-                    >
-                        <core:Item
-                            key="{searchHelp>key}"
-                            text="{searchHelp>name}"
-                        />
-                    </ComboBox>
-                    <Label text="Supplier Name" />
-                    <ComboBox
-                        required="true"
-                        showClearIcon="true"
-                        selectedKey="{form>SupplierName}"
-                        items="{
-                            path: 'searchHelp>/ProductSuppliers'
-				        }"
-                        change="onChangeValue"
-                        fieldGroupIds="FormField"
-                    >
-                        <core:Item
-                            key="{searchHelp>key}"
-                            text="{searchHelp>name}"
-                        />
-                    </ComboBox>
+                        description="VND"
+                    />
                 </f:content>
             </f:SimpleForm>
         </content>

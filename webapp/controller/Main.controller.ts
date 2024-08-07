@@ -1,7 +1,10 @@
 import type { Button$PressEvent } from "sap/m/Button";
 import ComboBox from "sap/m/ComboBox";
 import DatePicker from "sap/m/DatePicker";
-import Dialog, { type Dialog$AfterCloseEvent } from "sap/m/Dialog";
+import Dialog, {
+  type Dialog$AfterCloseEvent,
+  type Dialog$BeforeOpenEvent,
+} from "sap/m/Dialog";
 import Input from "sap/m/Input";
 import InputBase, { type InputBase$ChangeEvent } from "sap/m/InputBase";
 import Label from "sap/m/Label";
@@ -27,6 +30,10 @@ import type { Product } from "../types";
 import type { FilterData } from "../types/filter";
 import type { Dict } from "../types/utils";
 import Base from "./Base.controller";
+import type Component from "sap/ui/core/Component";
+import ODataModel from "sap/ui/model/odata/v2/ODataModel";
+import type { ODataSuccessResponse } from "../types/odata";
+import type { Employee } from "../types/page/employee";
 
 /**
  * @namespace sphinxjsc.com.fioritutorial.controller
@@ -40,6 +47,7 @@ export default class Main extends Base {
   private addProductDialog?: Dialog;
   private productDetailDialog?: Dialog;
   private editProductDialog?: Dialog;
+  private component: Component;
 
   public onInit(): void {
     this.svm = this.getControlById("svm");
@@ -47,6 +55,14 @@ export default class Main extends Base {
     this.snappedLabel = this.getControlById("snappedLabel");
     this.filterBar = this.getControlById("filterbar");
     this.table = this.getControlById("table");
+    this.component = <Component>this.getOwnerComponent();
+
+    this.setModel(
+      new JSONModel({
+        currency: "VND",
+      }),
+      "view"
+    );
 
     this.setModel(
       new JSONModel({
@@ -58,19 +74,11 @@ export default class Main extends Base {
     );
     this.setModel(
       new JSONModel({
-        rows: MODEL_DATA.ProductCollection,
+        rows: [],
       }),
       "table"
     );
-    this.setModel(
-      new JSONModel({
-        Name: "",
-        ProductId: "",
-        Category: "",
-        SupplierName: "",
-      }),
-      "form"
-    );
+    this.setModel(new JSONModel({}), "form");
 
     this.filterBar.registerFetchData(this.fetchData);
     this.filterBar.registerApplyData(this.applyData);
@@ -85,6 +93,33 @@ export default class Main extends Base {
       })
     );
     this.svm.initialise(() => {}, this.filterBar);
+
+    this.onFetchData();
+  }
+
+  private onFetchData() {
+    const tableModel = this.getModel("table");
+    const oDataModel = <ODataModel>this.component.getModel();
+
+    this.table.setBusy(true);
+    oDataModel.read("/EmployeeSet", {
+      success: (response: ODataSuccessResponse<Employee>) => {
+        tableModel.setProperty("/rows", response.results);
+        this.table.setBusy(false);
+        console.log(response.results);
+      },
+      error: (error: Error) => {
+        this.table.setBusy(false);
+        console.log(error);
+      },
+    });
+  }
+
+  public currencyFormatter(salary: number, currency: string) {
+    return Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: currency,
+    }).format(salary);
   }
 
   // #region Filter
@@ -291,9 +326,30 @@ export default class Main extends Base {
       }));
     }
 
-    this.editProductDialog.bindElement("form>/");
     this.editProductDialog.bindElement(`table>/rows/${rowIndex}`);
     this.editProductDialog.open();
+  }
+
+  public onBeforeEditProduct(event: Dialog$BeforeOpenEvent) {
+    const oDataModel = <ODataModel>this.component.getModel();
+    const formModel = this.getModel("form");
+    const dialog = event.getSource();
+    const row = <Employee>dialog.getBindingContext("table")?.getObject();
+
+    dialog.setBusy(true);
+    const key = oDataModel.createKey("/EmployeeSet", row);
+    // `/EmployeeSet(Employeeid='${row.Employeeid}')`
+    oDataModel.read(key, {
+      success: (response: Employee) => {
+        formModel.setData(response);
+        dialog.bindElement("form>/"); // 2
+        dialog.setBusy(false);
+      },
+      error: (error: Error) => {
+        dialog.setBusy(false);
+        console.log(error);
+      },
+    });
   }
 
   public onCloseEditProduct() {
@@ -301,10 +357,8 @@ export default class Main extends Base {
   }
 
   public onEditProduct(event: Button$PressEvent) {
-    const tableModel = this.getModel("table");
-    const path = event.getSource().getBindingContext("table")?.getPath();
-
-    const rowIndex = path?.split("/rows/").pop();
+    const oDataModel = <ODataModel>this.component.getModel();
+    const dialog = <Dialog>this.editProductDialog;
 
     const controls = this.getControlsByFieldGroupId<InputBase>({
       control: this.editProductDialog,
@@ -319,9 +373,20 @@ export default class Main extends Base {
 
     const value = <Product>this.getModel("form").getData();
 
-    tableModel.setProperty(`/rows/${rowIndex}`, value);
-
-    MessageToast.show("Product was successfully updated");
+    dialog.setBusy(true);
+    const key = oDataModel.createKey("/EmployeeSet", value);
+    // `/EmployeeSet(Employeeid='${row.Employeeid}')`
+    oDataModel.update(key, value, {
+      success: (response: Employee) => {
+        console.log(response);
+        MessageToast.show("Product was successfully updated");
+        this.onFetchData();
+      },
+      error: (error: Error) => {
+        dialog.setBusy(false);
+        console.log(error);
+      },
+    });
 
     this.onCloseEditProduct();
   }
@@ -329,9 +394,7 @@ export default class Main extends Base {
   // Product detail
   public async onOpenProductDetail(event: ObjectIdentifier$TitlePressEvent) {
     const source = event.getSource();
-    const row = <Product>source.getBindingContext("table")?.getObject();
-
-    this.getModel("form").setData(row);
+    const path = <string>source.getBindingContext("table")?.getPath();
 
     if (!this.productDetailDialog) {
       this.productDetailDialog = await (<Promise<Dialog>>this.loadFragment({
@@ -339,8 +402,32 @@ export default class Main extends Base {
       }));
     }
 
-    this.productDetailDialog.bindElement("form>/");
+    this.productDetailDialog.bindElement(`table>${path}`);
     this.productDetailDialog.open();
+  }
+
+  // 1. Binding model `form` vào dialog => truy cập giá trị: form>FieldName
+  // 2. Set data vào model `form` => truy cập giá trị trực tiếp từ model: form>/FieldName
+  public onBeforeOpenEmployeeDetail(event: Dialog$BeforeOpenEvent) {
+    const oDataModel = <ODataModel>this.component.getModel();
+    const formModel = this.getModel("form");
+    const dialog = event.getSource();
+    const row = <Employee>dialog.getBindingContext("table")?.getObject();
+
+    dialog.setBusy(true);
+    const key = oDataModel.createKey("/EmployeeSet", row);
+    // `/EmployeeSet(Employeeid='${row.Employeeid}')`
+    oDataModel.read(key, {
+      success: (response: Employee) => {
+        formModel.setData(response);
+        dialog.bindElement("form>/"); // 2
+        dialog.setBusy(false);
+      },
+      error: (error: Error) => {
+        dialog.setBusy(false);
+        console.log(error);
+      },
+    });
   }
 
   public onCloseProductDetail() {
@@ -365,21 +452,27 @@ export default class Main extends Base {
 
   // Delete product
   public onDeleteProduct(event: RowActionItem$PressEvent) {
-    const tableModel = this.getModel("table");
-    const row = <Row>event.getParameter("row");
-    const rowIndex = row.getIndex();
+    const oDataModel = <ODataModel>this.component.getModel();
+    const row = <Employee>(
+      event.getSource().getBindingContext("table")?.getObject()
+    );
 
     MessageBox.confirm("Do you want to delete this row?", {
       actions: [MessageBox.Action.DELETE, MessageBox.Action.CANCEL],
       emphasizedAction: MessageBox.Action.DELETE,
       onClose: (action: unknown) => {
         if (action === MessageBox.Action.DELETE) {
-          const rows = (<Product[]>tableModel.getProperty("/rows")).slice();
-          rows.splice(rowIndex, 1);
-
-          tableModel.setProperty("/rows", rows);
-
-          MessageToast.show("Product was successfully deleted");
+          const key = oDataModel.createKey("/EmployeeSet", row);
+          // `/EmployeeSet(Employeeid='${row.Employeeid}')`
+          oDataModel.remove(key, {
+            success: () => {
+              this.onFetchData();
+              MessageToast.show("Employee was successfully deleted");
+            },
+            error: (error: Error) => {
+              console.log(error);
+            },
+          });
         }
       },
     });

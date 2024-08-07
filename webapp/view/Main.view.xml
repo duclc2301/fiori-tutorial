@@ -127,7 +127,7 @@
                     <OverflowToolbar class="sapMTBHeader-CTX">
                         <Title
                             id="title"
-                            text="Products"
+                            text="Employees"
                         />
                         <ToolbarSpacer />
                         <Button
@@ -147,31 +147,80 @@
                 </table:extension>
                 <table:columns>
                     <table:Column>
-                        <Label text="Product Name" />
+                        <Label text="ID" />
                         <table:template>
                             <ObjectIdentifier
-                                title="{table>Name}"
+                                title="{table>Employeeid}"
                                 titleActive="true"
                                 titlePress="onOpenProductDetail"
                             />
                         </table:template>
                     </table:Column>
                     <table:Column>
-                        <Label text="Product Id" />
+                        <Label text="Full Name" />
                         <table:template>
-                            <Text text="{table>ProductId}" />
+                            <Text text="{table>Fullname}" />
                         </table:template>
                     </table:Column>
                     <table:Column>
-                        <Label text="Category" />
+                        <Label text="Gender" />
                         <table:template>
-                            <Label text="{table>Category}" />
+                            <Label text="{table>Gender}" />
                         </table:template>
                     </table:Column>
                     <table:Column>
-                        <Label text="SupplierName" />
+                        <Label text="Start Date" />
                         <table:template>
-                            <Label text="{table>SupplierName}" />
+                            <Label text="{table>StartDate}" />
+                        </table:template>
+                    </table:Column>
+                    <table:Column>
+                        <Label text="Contract Type" />
+                        <table:template>
+                            <Label text="{table>Contracttype}" />
+                        </table:template>
+                    </table:Column>
+                    <table:Column>
+                        <Label text="Birthdate" />
+                        <table:template>
+                            <Label text="{table>Birthdate}" />
+                        </table:template>
+                    </table:Column>
+                    <table:Column>
+                        <Label text="Address" />
+                        <table:template>
+                            <Label text="{table>Address}" />
+                        </table:template>
+                    </table:Column>
+                    <table:Column>
+                        <Label text="Phone" />
+                        <table:template>
+                            <Label text="{table>Phone}" />
+                        </table:template>
+                    </table:Column>
+                    <table:Column>
+                        <Label text="Plans" />
+                        <table:template>
+                            <Label text="{table>Plans}" />
+                        </table:template>
+                    </table:Column>
+                    <table:Column>
+                        <Label text="Salary" />
+                        <table:template>
+                            <Label
+                                text="{
+                                    parts: [
+                                        'table>Salary',
+                                        'view>/currency'
+                                    ],
+                                    type: 'sap.ui.model.type.Currency',
+                                    formatOptions: {
+                                        showMeasure: true,
+                                        decimalSeparator: ',',
+                                        groupingSeparator: '.'
+                                    }
+                                }"
+                            />
                         </table:template>
                     </table:Column>
                 </table:columns>
